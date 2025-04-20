@@ -41,7 +41,6 @@ export async function createInvoice(prevState: State, formData: FormData) {
     amount: formData.get('amount'),
     status: formData.get('status'),
   });
-  console.log(' createInvoice validatedFields:', validatedFields);
 
   // If form validation fails, return errors early. Otherwise, continue.
   if (!validatedFields.success) {
@@ -51,16 +50,13 @@ export async function createInvoice(prevState: State, formData: FormData) {
     };
   }
 
-  // Prepare data for insertion into the database
   const { customerId, amount, status } = validatedFields.data;
   const amountInCents = amount * 100;
-  const date = new Date().toISOString().split('T')[0];
 
-  // Insert data into the database
   try {
     await sql`
-      INSERT INTO invoices (customer_id, amount, status, date)
-      VALUES (${customerId}, ${amountInCents}, ${status}, ${date})
+      INSERT INTO invoices (customer_id, amount, status, created_at)
+      VALUES (${customerId}, ${amountInCents}, ${status}, CURRENT_TIMESTAMP)
     `;
   } catch (error) {
     console.error(error);
@@ -101,7 +97,7 @@ export async function updateInvoice(
   try {
     await sql`
       UPDATE invoices
-      SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
+      SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}, updated_at = CURRENT_TIMESTAMP
       WHERE id = ${id}
     `;
   } catch (error) {
@@ -114,8 +110,6 @@ export async function updateInvoice(
 }
 
 export async function deleteInvoice(id: string) {
-  // throw new Error('Failed to Delete Invoice');
-
   await sql`DELETE FROM invoices WHERE id = ${id}`;
   revalidatePath('/dashboard/invoices');
 }
