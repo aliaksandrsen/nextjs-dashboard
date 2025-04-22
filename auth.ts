@@ -5,6 +5,9 @@ import { z } from 'zod';
 import type { User } from '@/app/lib/definitions';
 import bcrypt from 'bcrypt';
 import postgres from 'postgres';
+import GitHub from 'next-auth/providers/github';
+import Google from 'next-auth/providers/google';
+import Yandex from 'next-auth/providers/yandex';
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 
@@ -18,11 +21,11 @@ async function getUser(email: string): Promise<User | undefined> {
   }
 }
 
-export const { auth, signIn, signOut } = NextAuth({
+export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   providers: [
     Credentials({
-      async authorize(credentials) {
+      authorize: async (credentials) => {
         const parsedCredentials = z
           .object({ email: z.string().email(), password: z.string().min(6) })
           .safeParse(credentials);
@@ -40,5 +43,8 @@ export const { auth, signIn, signOut } = NextAuth({
         return null;
       },
     }),
+    GitHub,
+    Google,
+    Yandex,
   ],
 });
